@@ -1,0 +1,152 @@
+---
+- name: dig server external IP
+  shell: "dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com"
+  args:
+    executable: /bin/bash
+  register: digged
+
+- name: register external IP
+  set_fact: 
+    diggedServerIP={{ digged.stdout | regex_replace('[\"]', '') }}
+  when: diggedServerIP is not defined or diggedServerIP == ''
+
+- name: upgrade all by APT
+  apt:
+    name: "*"
+    state: latest
+
+- name: install extra software
+  apt:
+    name: '{{ item }}'
+    state: present
+  with_items: '{{ extraDEBpackages }}'
+  when: extraDEBpackages is defined and extraDEBpackages != ''
+
+- name: install AWS CLI
+  block:
+    - debug:
+        msg: "install AWS CLI"
+    - get_url:
+        url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+        dest: /tmp/awscliv2.zip
+    - unarchive:
+        src: /tmp/awscliv2.zip
+        dest: /tmp/
+        remote_src: yes
+    - shell: /tmp/aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+      args:
+        executable: /bin/bash
+        chdir: /tmp/aws/
+    - debug:
+        msg: "AWS CLI added"
+  rescue:
+    - debug:
+        msg: "Unable to add AWS CLI"
+
+- name: Create directories if they do not exist
+  file:
+    path: '{{ item }}'
+    state: directory
+    mode: '0755'
+  with_items:
+    - /etc/openvpn/ccd/
+    - /etc/openvpn/easy-rsa/
+    - /etc/openvpn/keys/
+
+- name: Prepare server config
+  template:
+    src: server.conf.j2
+    dest: /etc/openvpn/server/server.conf
+    mode: '0666'
+
+- name: generate CA certificate, Diffie Hellman Parameters, OpenVPN Server Certificate and Key, Hash-based Message Authentication Code (HMAC) key, OpenVPN Revocation Certificate
+  block:
+    - debug:
+        msg: "generate: \nCA certificate, \nDiffie Hellman Parameters, \nOpenVPN Server Certificate and Key, \nHash-based Message Authentication Code (HMAC) key, \nOpenVPN Revocation Certificate"
+    - file:
+        path: /etc/easy-rsa/pki
+        state: absent
+    - shell: /usr/bin/cp -r /usr/share/easy-rsa /etc/
+    - shell: ./easyrsa init-pki
+      args:
+        executable: /bin/bash
+        chdir: /etc/easy-rsa/
+    - template:
+        src: vars.j2
+        dest: /etc/easy-rsa/pki/vars
+        owner: root
+        group: root
+        mode: '0644'
+        backup: no
+    - shell: ./easyrsa build-ca nopass
+      args:
+        executable: /bin/bash
+        chdir: /etc/easy-rsa/
+    - shell: ./easyrsa gen-dh
+      args:
+        executable: /bin/bash
+        chdir: /etc/easy-rsa/
+    - shell: ./easyrsa build-server-full server nopass
+      args:
+        executable: /bin/bash
+        chdir: /etc/easy-rsa/
+    - shell: openvpn --genkey secret /etc/easy-rsa/pki/ta.key
+      args:
+        executable: /bin/bash
+    - shell: ./easyrsa gen-crl
+      args:
+        executable: /bin/bash
+        chdir: /etc/easy-rsa/
+    - debug:
+        msg: "Generated sucessfully"
+  rescue:
+    - debug:
+        msg: "Unable to generate, see errors below"
+
+- name: Copy generated files
+  shell:
+    cmd: cp -rp {{ item }} /etc/openvpn/server/
+  with_items:
+    - /etc/easy-rsa/pki/ca.crt
+    - /etc/easy-rsa/pki/crl.pem
+    - /etc/easy-rsa/pki/dh.pem
+    - /etc/easy-rsa/pki/issued
+    - /etc/easy-rsa/pki/private
+    - /etc/easy-rsa/pki/ta.key
+
+# - name: Allow in for OpenVPN
+#   ansible.builtin.iptables:
+#     chain: INPUT
+#     protocol: {{ openVPNserver_proto }}
+#     destination_port: {{ openVPNserver_port }}
+#     jump: ALLOW
+
+- name: Set ip forwarding on in /proc and in the sysctl file and reload if necessary
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+#iptables -t nat -A POSTROUTING -s 192.168.168.192/26 -o eth0 -j MASQUERADE
+- name: Enable MASQUERADE
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: eth0
+    source: "{{ openVPN_netWork }}/{{ openVPN_netMask }}"
+    jump: MASQUERADE
+    comment: Hope it works
+  become: yes
+
+- name: Run task to create VPN clients
+  include_tasks: addVPNclient.yaml
+  loop: "{{ lookup('dict', vpnClients, wantlist=True ) }}"
+  when: vpnClients is defined and vpnClients != ''
+
+- name: Enable and start service
+  ansible.builtin.systemd:
+    name: openvpn-server@server
+    state: restarted
+    enabled: true

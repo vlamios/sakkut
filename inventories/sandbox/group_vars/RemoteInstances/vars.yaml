@@ -1,0 +1,28 @@
+---
+commonDEBpackages:
+  - apt-transport-https
+  - aptitude
+  - atop
+  - byobu
+  - curl
+  - deborphan
+  - git
+  - htop
+  - iperf
+  - jq
+  - mc
+  - net-tools
+  - nfs-common
+  - nmap
+  - openssh-server
+  - python3-pip
+  - screen
+  - tcpdump
+  - telnet
+  - vim
+  - wget
+
+extraDEBpackages:
+  - easy-rsa
+  - iptables-persistent
+  - openvpn

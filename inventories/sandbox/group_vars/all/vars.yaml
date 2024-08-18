@@ -1,0 +1,53 @@
+---
+# file: group_vars/all/vars.yaml
+ansible_ssh_user: "{{ unixSemiAdmName }}"
+ansible_ssh_pass: "{{ unixSemiAdmPass }}"
+ansible_become: yes 
+ansible_become_method: sudo
+ansible_become_pass: "{{ unixSemiAdmPass }}"
+
+unixSemiAdmName: osadmin
+unixSemiAdmGroup: users
+unixSemiAdmGroups:
+  - users
+  - adm
+  - cdrom
+  - plugdev
+  - games
+  - bluetooth
+  - sambashare
+  - lxd
+unixSemiAdmComment: OS Admin
+# unixSemiAdmSudo: "{{ unixSemiAdmName }}	ALL=(ALL) 	NOPASSWD: ALL"
+unixSemiAdmPass: ""
+
+# Public part of our key to add
+personalSSHkeys: [
+  'ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEApWWTuvKZPt5xICRvN16IZZ1pcP+a1pUfZvz/pC13ivyMbWvuywjay+CUr1To8TfqVoiEcPADkMOoAoMvI2TyJcPU5cNJdiqyRWNWSzABbhGCB5T0EvhhNXzkqWBLFOVpuy4UNYAr8y6tM1FLkToOt44uFmJlX8k1leeyAOjUU/O6VAOtBEllxoAtV6KliUWdS5UG3hzMXvPS1nFW05ZqtV8MxYRX4DcQI70M5pt1wWRdGgDpDYJv2uHiPAceLPUuslySP5yVU0O3OXz36XNqocx0DlVWGh4XNKEG8Zf4+9sdC+O9j3Mjr94VMBtzvr2sv3zeAAjtz16nYYCebYzE3Q== osadmin@vbook'
+]
+
+# Common packages
+commonDEBpackages:
+  - apt-transport-https
+  - aptitude
+  - atop
+  - byobu
+  - curl
+  - deborphan
+  - git
+  - htop
+  - iperf
+  - jq
+  - mc
+  - net-tools
+  - nfs-common
+  - nmap
+  - openssh-server
+  - python3-pip
+  - screen
+  - tcpdump
+  - telnet
+  - vim
+  - wget
+
+extraDEBpackages: ""

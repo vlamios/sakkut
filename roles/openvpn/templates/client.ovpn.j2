@@ -1,0 +1,12 @@
+dev {{ openVPNserver_dev }}
+remote {{ diggedServerIP }} {{ openVPNserver_port }} {{ openVPNserver_proto }}
+persist-tun
+persist-key
+client
+resolv-retry infinite
+lport 0
+remote-cert-tls server
+allow-compression no
+comp-lzo no
+verb {{ openVPNserver_verb }}
+key-direction 1

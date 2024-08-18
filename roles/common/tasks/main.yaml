@@ -1,0 +1,40 @@
+---
+- name: Create group {{ unixSemiAdmGroup }}
+  group:
+    name: '{{ unixSemiAdmGroup }}'
+    state: present
+  
+# - name: Create Semi Admin User {{ unixSemiAdmName }}
+#   user:
+#     name: '{{ unixSemiAdmName }}'
+#     comment: '{{ unixSemiAdmComment }}'
+#     groups: '{{ unixSemiAdmGroups }}'
+#     shell: /bin/bash
+#     state: present
+
+- name: Set up authorized keys for {{ unixSemiAdmName }}
+  authorized_key:
+    user: '{{ unixSemiAdmName }}'
+    state: present
+    key: '{{ item }}'
+    # exclusive: True
+    manage_dir: yes
+  with_items: '{{ personalSSHkeys }}'
+  when: personalSSHkeys is defined and personalSSHkeys != ''
+
+- name: update by APT
+  apt:
+    update_cache: yes
+
+- name: upgrade all by APT
+  apt:
+    name: "*"
+    state: latest
+
+- name: install common software
+  apt:
+    name: '{{ item }}'
+#   state: latest
+    state: present
+  with_items: '{{ commonDEBpackages }}'
+  when: commonDEBpackages is defined and commonDEBpackages != ''

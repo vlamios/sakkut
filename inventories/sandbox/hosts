@@ -1,0 +1,7 @@
+---
+all:
+  children:
+    RemoteInstances:
+      hosts:
+        Hekke:
+          ansible_host: ""

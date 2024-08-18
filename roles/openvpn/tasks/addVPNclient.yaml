@@ -1,0 +1,51 @@
+---
+- name: create VPN client {{ item.value.name }}
+  block:
+    - debug:
+        msg: "create VPN client {{ item.value.name }}, \n                  {{ item.value.eMail4keys }}"
+    - file:
+        path: /etc/openvpn/client/{{ item.value.name }}
+        state: absent
+    - shell: ./easyrsa build-client-full {{ item.value.name }} nopass
+      args:
+        executable: /bin/bash
+        chdir: /etc/easy-rsa/
+    - file:
+        path: /etc/openvpn/client/{{ item.value.name }}
+        state: directory
+        mode: '0755'
+    - shell: cp -rp /etc/easy-rsa/pki/ca.crt /etc/openvpn/client/{{ item.value.name }}/
+      args:
+        executable: /bin/bash
+    - shell: cp -rp /etc/easy-rsa/pki/issued/{{ item.value.name }}.crt /etc/openvpn/client/{{ item.value.name }}/
+      args:
+        executable: /bin/bash
+    - shell: cp -rp /etc/easy-rsa/pki/private/{{ item.value.name }}.key /etc/openvpn/client/{{ item.value.name }}/
+      args:
+        executable: /bin/bash
+### .OVPN-file preparation
+    - template:
+        src: client.ovpn.j2
+        dest: /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+        owner: root
+        group: root
+        mode: '0644'
+        backup: no
+    - shell: echo "<ca>" >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: cat /etc/openvpn/client/{{ item.value.name }}/ca.crt >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: echo "</ca>" >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: echo "<cert>" >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: cat /etc/openvpn/client/{{ item.value.name }}/{{ item.value.name }}.crt >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: echo "</cert>" >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: echo "<key>" >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: cat /etc/openvpn/client/{{ item.value.name }}/{{ item.value.name }}.key >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: echo "</key>" >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: echo "<tls-auth>" >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: cat /etc/openvpn/server/ta.key >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+    - shell: echo "</tls-auth>" >> /etc/openvpn/client/{{ item.value.name }}/client.ovpn
+### .OVPN-file preparation finished
+    - debug:
+        msg: "VPN client {{ item.value.name }} created sucessfully"
+  rescue:
+    - debug:
+        msg: "Unable to create, see errors below"

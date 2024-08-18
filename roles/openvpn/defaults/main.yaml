@@ -1,0 +1,39 @@
+---
+ansible_become: yes 
+ansible_become_method: sudo
+ansible_become_pass: "{{ unixSemiAdmPass }}"
+
+# Additional packages
+extraDEBpackages:
+  - easy-rsa
+  - iptables-persistent
+  - openvpn
+
+vpnClients: ""
+
+# dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
+# If defined would not dig
+diggedServerIP: ''
+
+var_EASYRSA_DN: org
+var_EASYRSA_REQ_COUNTRY: AQ
+var_EASYRSA_REQ_PROVINCE: Villa Las Estrellas
+var_EASYRSA_REQ_CITY: Villa Las Estrellas
+var_EASYRSA_REQ_ORG: wdm@example.com
+var_EASYRSA_REQ_EMAIL: wdm@example.com
+var_EASYRSA_REQ_OU: wdm
+
+openVPN_netWork: "192.168.168.192"
+openVPN_netMask: "255.255.255.192"
+openVPNserver_port: 1194
+openVPNserver_proto: udp
+openVPNserver_dev: tun
+openVPNserver_server: "{{ openVPN_netWork  }} {{ openVPN_netMask  }}"
+openVPNserver_pushDNS: "8.8.8.8"
+openVPNserver_client_to_client: "client-to-client"
+openVPNserver_keepalive: "10 120"
+openVPNserver_max_clients: 8
+#openVPNserver_log_append: ";log-append  /var/log/openvpn/openvpn.log"
+openVPNserver_log_append: "log /var/log/openvpn/openvpn.log"
+openVPNserver_verb: 4
+openVPNserver_explicit_exit_notify: 1
