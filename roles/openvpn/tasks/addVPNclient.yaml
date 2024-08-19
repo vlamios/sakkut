@@ -2,7 +2,7 @@
 - name: create VPN client {{ item.value.name }}
   block:
     - debug:
-        msg: "create VPN client {{ item.value.name }}, \n                  {{ item.value.eMail4keys }}"
+        msg: "create VPN client {{ item.value.name }}, \n                  {{ item.value.eMail }}"
     - file:
         path: /etc/openvpn/client/{{ item.value.name }}
         state: absent
@@ -49,3 +49,30 @@
   rescue:
     - debug:
         msg: "Unable to create, see errors below"
+
+- name: Send config to {{ item.value.eMail }}
+  block:
+    - debug:
+        msg: "send config to {{ item.value.eMail }}"
+    - template:
+        src: rawEmail.txt.j2
+        dest: /tmp/rawEmail.txt
+        owner: root
+        group: root
+        mode: '0644'
+        backup: no
+    - shell: base64 /etc/openvpn/client/{{ item.value.name }}/client.ovpn >> /tmp/rawEmail.txt
+    - shell: echo >> /tmp/rawEmail.txt
+    - shell: echo "--NextPart--" >> /tmp/rawEmail.txt
+    - shell: aws sesv2 send-email --from-email-address {{ senderMail }} --destination "ToAddresses={{ item.value.eMail }}" --content "Raw={Data=$(cat /tmp/rawEmail.txt | base64)}" --endpoint-url https://postbox.cloud.yandex.net
+      register: messageId
+    - debug:
+        msg: "{{ messageId.stdout }}"
+  when: aws.region != '' and aws.access_key_id != '' and aws.secret_access_key != ''
+  rescue:
+    - debug:
+        msg: "Unable to send"
+  always:
+    - file:
+        path: /tmp/rawEmail.txt
+        state: absent

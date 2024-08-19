@@ -1,9 +1,27 @@
 ---
-ansible_become: yes 
-ansible_become_method: sudo
-ansible_become_pass: "{{ unixSemiAdmPass }}"
+commonDEBpackages:
+  - apt-transport-https
+  - aptitude
+  - atop
+  - byobu
+  - curl
+  - deborphan
+  - git
+  - htop
+  - iperf
+  - jq
+  - mc
+  - net-tools
+  - nfs-common
+  - nmap
+  - openssh-server
+  - python3-pip
+  - screen
+  - tcpdump
+  - telnet
+  - vim
+  - wget
 
-# Additional packages
 extraDEBpackages:
   - easy-rsa
   - iptables-persistent
@@ -13,8 +31,18 @@ aws:
   region: ru-central1
   access_key_id: ""
   secret_access_key: ""
-senderMail: ""
-vpnClients: ""
+
+senderMail: "hekke@vlamios.net"
+vpnClients:
+  kulepov:
+    name: kulepov
+    eMail: iflyapin@gmail.com
+  spectrum:
+    name: spectrum
+    eMail: vlamios@gmail.com
+  vbook:
+    name: vbook
+    eMail: vlamios@yandex.ru
 
 # dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
 # If defined would not dig

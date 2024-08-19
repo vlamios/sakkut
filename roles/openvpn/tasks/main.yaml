@@ -26,6 +26,9 @@
   block:
     - debug:
         msg: "install AWS CLI"
+    - file:
+        path: /root/.aws/
+        state: directory
     - get_url:
         url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
         dest: /tmp/awscliv2.zip
@@ -37,6 +40,20 @@
       args:
         executable: /bin/bash
         chdir: /tmp/aws/
+    - template:
+        src: aws-config.j2
+        dest: /root/.aws/config
+        owner: root
+        group: root
+        mode: '0644'
+        backup: no
+    - template:
+        src: aws-credentials.j2
+        dest: /root/.aws/credentials
+        owner: root
+        group: root
+        mode: '0600'
+        backup: no
     - debug:
         msg: "AWS CLI added"
   rescue:
@@ -150,3 +167,10 @@
     name: openvpn-server@server
     state: restarted
     enabled: true
+
+- name: Remove directories
+  file:
+    path: '{{ item }}'
+    state: absent
+  with_items:
+    - /root/.aws/

@@ -1,6 +1,6 @@
-resource "yandex_compute_instance" "hekke" {
-  name        = "hekke"
-  hostname    = "hekke"
+resource "yandex_compute_instance" "gulu" {
+  name        = "gulu"
+  hostname    = "gulu"
   platform_id = "standard-v2"
   zone        = var.prefered_zones[0]
   labels      = "${var.labels}"
@@ -22,27 +22,27 @@ resource "yandex_compute_instance" "hekke" {
   }
 
   boot_disk {
-    disk_id = "${yandex_compute_disk.hekke-disk.id}"
+    disk_id = "${yandex_compute_disk.gulu-disk.id}"
   }
 
   network_interface {
     subnet_id      = "${yandex_vpc_subnet.default.id}"
     ipv4           = true
     ipv6           = false
-    nat_ip_address = "${yandex_vpc_address.hekke-ip.external_ipv4_address[0].address}"
+    nat_ip_address = "${yandex_vpc_address.gulu-ip.external_ipv4_address[0].address}"
     nat            = true
   }
 
   metadata = {
-    motto              = "Quaerere et invenire"
+    motto              = "Protéger & servir"
     enable-oslogin     = false
     serial-port-enable = 0
     user-data          = "#cloud-config\nusers:\n  - name: osadmin\n    groups: sudo\n    shell: /bin/bash\n    sudo: 'ALL=(ALL) NOPASSWD:ALL'\n    ssh-authorized-keys:\n      - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEApWWTuvKZPt5xICRvN16IZZ1pcP+a1pUfZvz/pC13ivyMbWvuywjay+CUr1To8TfqVoiEcPADkMOoAoMvI2TyJcPU5cNJdiqyRWNWSzABbhGCB5T0EvhhNXzkqWBLFOVpuy4UNYAr8y6tM1FLkToOt44uFmJlX8k1leeyAOjUU/O6VAOtBEllxoAtV6KliUWdS5UG3hzMXvPS1nFW05ZqtV8MxYRX4DcQI70M5pt1wWRdGgDpDYJv2uHiPAceLPUuslySP5yVU0O3OXz36XNqocx0DlVWGh4XNKEG8Zf4+9sdC+O9j3Mjr94VMBtzvr2sv3zeAAjtz16nYYCebYzE3Q== osadmin@vbook"
   }
 }
 
-resource "yandex_compute_disk" "hekke-disk" {
-  name     = "hekke-disk"
+resource "yandex_compute_disk" "gulu-disk" {
+  name     = "gulu-disk"
   type     = "network-hdd"
   zone     = var.prefered_zones[0]
   size     = 16
@@ -53,8 +53,8 @@ resource "yandex_compute_disk" "hekke-disk" {
   labels   = "${var.labels}"
 }
 
-resource "yandex_vpc_address" "hekke-ip" {
-  name      = "hekke-ip"
+resource "yandex_vpc_address" "gulu-ip" {
+  name      = "gulu-ip"
   external_ipv4_address {
     zone_id = var.prefered_zones[0]
   }
@@ -64,7 +64,7 @@ resource "yandex_vpc_address" "hekke-ip" {
 //ttl - (Optional) TTL of DNS record
 //ptr - (Optional) If PTR record is needed
   dns_record {
-    fqdn        = "hekke.${var.project_domain_zone}."
+    fqdn        = "gulu.${var.project_domain_zone}."
     dns_zone_id = "${yandex_dns_zone.project_domain.id}"
     ttl         = 300
     ptr         = true
@@ -72,10 +72,10 @@ resource "yandex_vpc_address" "hekke-ip" {
   labels    = "${var.labels}"
 }
 
-resource "yandex_dns_recordset" "hekke-project_domain" {
+resource "yandex_dns_recordset" "gulu-project_domain" {
   zone_id = "${yandex_dns_zone.project_domain.id}"
-  name    = "hekke.${var.project_domain_zone}."
+  name    = "gulu.${var.project_domain_zone}."
   type    = "A"
   ttl     = 300
-  data    = ["${yandex_vpc_address.hekke-ip.external_ipv4_address[0].address}"]
+  data    = ["${yandex_vpc_address.gulu-ip.external_ipv4_address[0].address}"]
 }

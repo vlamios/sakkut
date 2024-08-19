@@ -2,7 +2,7 @@
 # ansible-playbook -i inventories/sandbox/hosts --vault-password-file ../vault.key applyRole.yaml --become --become-method=sudo --become-user=root
 #
 #
- - hosts: Hekke
+ - hosts: Gulu
    roles:
    - openvpn
 

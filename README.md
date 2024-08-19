@@ -1,4 +1,7 @@
 # OpenVPN Server in Yandex Cloud
+I have no public IP. And sometimes I want to play PC games by local net with my friends.
+Well this pack of scripts can quickly build virtual machine in Yandex Cloud and configure simple OpenVPN server with authentication.
+Ansible Role generates .ovpn-files for every client and sends them by email.
 
 ## YaCloud Preparation
 [Useful video tutorial](https://www.youtube.com/live/U58zSIvgyDI?si=bZ9TzHT6OfgyQbk5)
@@ -19,11 +22,12 @@ yc ydb database create sakkut-tfstate-lock --folder-name sakkut --serverless
 4. Create table in YDB:
 ![Creating Table](pics/YDBtable.png)
 
-5. Create service account for managing resources in folder & working with terraform state:
+5. Create service account for managing resources in folder & working with terraform state (one SA to rule them all!):
 ```
 yc resource-manager folder add-access-binding <folder-ID> --role admin --subject serviceAccount:<serviceAccount-ID>
 yc resource-manager folder add-access-binding <folder-ID> --role ydb.editor --subject serviceAccount:<serviceAccount-ID>
 yc resource-manager folder add-access-binding <folder-ID> --role storage.editor --subject serviceAccount:<serviceAccount-ID>
+yc resource-manager folder add-access-binding <folder-ID> --role postbox.sender --subject serviceAccount:<serviceAccount-ID>
 yc iam access-key create --service-account-name sa-sakkut-subadmin --folder-name sakkut
 ```
 Output of last command must be like:
@@ -52,11 +56,11 @@ and enter values for AWS Access Key ID & AWS Secret Access Key:
 ```
 AWS Access Key ID [None]: <key_id>
 AWS Secret Access Key [None]: <secret>
-Default region name [None]: 
+Default region name [None]: ru-central1
 Default output format [None]:
 ```
 
-8. Create VM for VPN Server:
+8. Build up virtual infrastructure for VPN Server:
 ```
 terraform validate
 terraform plan
@@ -69,7 +73,7 @@ ansible-playbook -i inventories/sandbox/hosts applyRole.yaml --vault-password-fi
 ```
 Client .ovpn-files stored in /etc/openvpn/client/*vpnClients.clientName*/client.ovpn
 
-10. Delete VM after all:
+10. Tear down infrastructure after all:
 ```
 terraform destroy
 ```
