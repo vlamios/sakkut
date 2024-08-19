@@ -1,40 +1,20 @@
 ---
-commonDEBpackages:
-  - apt-transport-https
-  - aptitude
-  - atop
-  - byobu
-  - curl
-  - deborphan
-  - git
-  - htop
-  - iperf
-  - jq
-  - mc
-  - net-tools
-  - nfs-common
-  - nmap
-  - openssh-server
-  - python3-pip
-  - screen
-  - tcpdump
-  - telnet
-  - vim
-  - wget
+# email, telegram
+sendConfigBy: "telegram"
 
-extraDEBpackages:
-  - easy-rsa
-  - iptables-persistent
-  - openvpn
+telegram:
+  botDir: /opt/telegram-bot
+  chatId: ''
+  token: ''
 
 vpnClients:
-  client01:
-    name: client01
-    eMail4keys: client01@example.com
+  vpnUser1:
+    clientNick: telegramNickName
+    eMail: nickName@example.com
 
 # dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
 # If defined would not dig
-diggedServerIP: ''
+diggedServerIP: '93.184.215.14'
 
 var_EASYRSA_DN: org
 var_EASYRSA_REQ_COUNTRY: AQ
@@ -46,7 +26,8 @@ var_EASYRSA_REQ_OU: wdm
 
 openVPN_netWork: "192.168.168.192"
 openVPN_netMask: "255.255.255.192"
-openVPNserver_port: 1194
+openVPNserver_phyIface: "ens1"
+openVPNserver_port: 2205
 openVPNserver_proto: udp
 openVPNserver_dev: tun
 openVPNserver_server: "{{ openVPN_netWork  }} {{ openVPN_netMask  }}"

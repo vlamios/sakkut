@@ -8,8 +8,24 @@ extraDEBpackages:
   - easy-rsa
   - iptables-persistent
   - openvpn
+  - python3
+  - python3-pip
+  - python3-venv
 
-vpnClients: ""
+# email or telegram
+sendConfigBy: ''
+
+telegram:
+  botDir: /opt/telegram-bot
+  chatId: ''
+  token:  ''
+
+aws:
+  region: ru-central1
+  access_key_id: ''
+  secret_access_key: ''
+senderMail: ''
+vpnClients: ''
 
 # dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
 # If defined would not dig
@@ -25,6 +41,7 @@ var_EASYRSA_REQ_OU: wdm
 
 openVPN_netWork: "192.168.168.192"
 openVPN_netMask: "255.255.255.192"
+openVPNserver_phyIface: "eth0"   # iptables POSTROUTING MASQUERADE
 openVPNserver_port: 1194
 openVPNserver_proto: udp
 openVPNserver_dev: tun

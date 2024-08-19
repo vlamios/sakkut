@@ -3,5 +3,5 @@ all:
   children:
     RemoteInstances:
       hosts:
-        Hekke:
-          ansible_host: ""
+        Gulu:
+          ansible_host: '93.184.215.14'

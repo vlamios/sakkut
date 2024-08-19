@@ -1,31 +1,34 @@
 ---
-- name: dig server external IP
+- name: Dig server external IP
   shell: "dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com"
   args:
     executable: /bin/bash
   register: digged
 
-- name: register external IP
+- name: Register external IP
   set_fact: 
     diggedServerIP={{ digged.stdout | regex_replace('[\"]', '') }}
   when: diggedServerIP is not defined or diggedServerIP == ''
 
-- name: upgrade all by APT
+- name: Upgrade all by APT
   apt:
     name: "*"
     state: latest
 
-- name: install extra software
+- name: Install extra software
   apt:
     name: '{{ item }}'
     state: present
   with_items: '{{ extraDEBpackages }}'
   when: extraDEBpackages is defined and extraDEBpackages != ''
 
-- name: install AWS CLI
+- name: Install AWS CLI
   block:
     - debug:
         msg: "install AWS CLI"
+    - file:
+        path: /root/.aws/
+        state: directory
     - get_url:
         url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
         dest: /tmp/awscliv2.zip
@@ -37,8 +40,23 @@
       args:
         executable: /bin/bash
         chdir: /tmp/aws/
+    - template:
+        src: aws-config.j2
+        dest: /root/.aws/config
+        owner: root
+        group: root
+        mode: '0644'
+        backup: no
+    - template:
+        src: aws-credentials.j2
+        dest: /root/.aws/credentials
+        owner: root
+        group: root
+        mode: '0600'
+        backup: no
     - debug:
         msg: "AWS CLI added"
+  when: sendConfigBy == 'email' and aws.region != '' and aws.access_key_id != '' and aws.secret_access_key != ''
   rescue:
     - debug:
         msg: "Unable to add AWS CLI"
@@ -59,7 +77,7 @@
     dest: /etc/openvpn/server/server.conf
     mode: '0666'
 
-- name: generate CA certificate, Diffie Hellman Parameters, OpenVPN Server Certificate and Key, Hash-based Message Authentication Code (HMAC) key, OpenVPN Revocation Certificate
+- name: Generate CA certificate, Diffie Hellman Parameters, OpenVPN Server Certificate and Key, Hash-based Message Authentication Code (HMAC) key, OpenVPN Revocation Certificate
   block:
     - debug:
         msg: "generate: \nCA certificate, \nDiffie Hellman Parameters, \nOpenVPN Server Certificate and Key, \nHash-based Message Authentication Code (HMAC) key, \nOpenVPN Revocation Certificate"
@@ -134,11 +152,36 @@
   iptables:
     table: nat
     chain: POSTROUTING
-    out_interface: eth0
+    out_interface: "{{ openVPNserver_phyIface }}"
     source: "{{ openVPN_netWork }}/{{ openVPN_netMask }}"
     jump: MASQUERADE
     comment: Hope it works
   become: yes
+
+- name: Prepare Python Virtual ENV
+  block:
+  - file:
+      path: "{{ telegram.botDir }}"
+      state: directory
+      mode: '0755'
+  - file:
+      path: "{{ telegram.botDir }}/venv"
+      state: directory
+      mode: '0755'
+  - command:
+      cmd: python3 -m venv "{{ telegram.botDir }}/venv"
+      creates: "{{ telegram.botDir }}/venv/bin/activate"
+  - pip:
+      name: pip
+      state: latest
+      virtualenv: "{{ telegram.botDir }}/venv"
+    # On Debian-based systems the correct python*-venv package must be installed to use the `venv` module.
+      virtualenv_command: "{{ telegram.botDir }}/venv/bin/python3 -m venv"
+  - pip:
+      name: python-telegram-bot
+      virtualenv: "{{ telegram.botDir }}/venv"
+      virtualenv_command: "{{ telegram.botDir }}/venv/bin/python3 -m venv"
+  when: sendConfigBy == 'telegram' and telegram.chatId != '' and telegram.token != ''
 
 - name: Run task to create VPN clients
   include_tasks: addVPNclient.yaml
@@ -150,3 +193,11 @@
     name: openvpn-server@server
     state: restarted
     enabled: true
+
+- name: Remove directories
+  file:
+    path: '{{ item }}'
+    state: absent
+  with_items:
+    - /root/.aws/
+    - "{{ telegram.botDir }}"

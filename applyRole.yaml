@@ -1,11 +1,7 @@
 ---
-# ansible-playbook -i inventories/sandbox/hosts --vault-password-file ../vault.key applyRole.yaml --become --become-method=sudo --become-user=root
+# ansible-playbook -i inventories/sandbox/hosts -e target=Gulu --vault-password-file ../vault.key applyRole.yaml --become --become-method=sudo --become-user=root
 #
 #
- - hosts: Hekke
-   roles:
+- hosts: {{ target }}
+  roles:
    - openvpn
-
-# - hosts: RemoteStations
-#   roles:
-#   - common
