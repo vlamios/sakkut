@@ -1,0 +1,105 @@
+---
+- name: Create VPN client {{ item.value.clientNick }}
+  block:
+  - debug:
+      msg: "create VPN client {{ item.value.clientNick }},\ 
+
+        \                  {{ item.value.eMail }}"
+  - file:
+      path: /etc/openvpn/client/{{ item.value.clientNick }}
+      state: absent
+  - shell: ./easyrsa build-client-full {{ item.value.clientNick }} nopass
+    args:
+      executable: /bin/bash
+      chdir: /etc/easy-rsa/
+  - file:
+      path: /etc/openvpn/client/{{ item.value.clientNick }}
+      state: directory
+      mode: '0755'
+  - shell: cp -rp /etc/easy-rsa/pki/ca.crt /etc/openvpn/client/{{ item.value.clientNick }}/
+    args:
+      executable: /bin/bash
+  - shell: cp -rp /etc/easy-rsa/pki/issued/{{ item.value.clientNick }}.crt /etc/openvpn/client/{{ item.value.clientNick }}/
+    args:
+      executable: /bin/bash
+  - shell: cp -rp /etc/easy-rsa/pki/private/{{ item.value.clientNick }}.key /etc/openvpn/client/{{ item.value.clientNick }}/
+    args:
+      executable: /bin/bash
+  ### .OVPN-file preparation
+  - template:
+      src: client.ovpn.j2
+      dest: /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+      owner: root
+      group: root
+      mode: '0644'
+      backup: no
+  - shell: echo "<ca>" >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: cat /etc/openvpn/client/{{ item.value.clientNick }}/ca.crt >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: echo "</ca>" >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: echo "<cert>" >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: cat /etc/openvpn/client/{{ item.value.clientNick }}/{{ item.value.clientNick }}.crt >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: echo "</cert>" >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: echo "<key>" >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: cat /etc/openvpn/client/{{ item.value.clientNick }}/{{ item.value.clientNick }}.key >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: echo "</key>" >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: echo "<tls-auth>" >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: cat /etc/openvpn/server/ta.key >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  - shell: echo "</tls-auth>" >> /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn
+  ### .OVPN-file preparation finished
+  - debug:
+      msg: "VPN client {{ item.value.clientNick }} created sucessfully"
+  rescue:
+  - debug:
+      msg: "Unable to create, see errors below"
+
+- name: Email config to {{ item.value.eMail }}
+  block:
+  - debug:
+      msg: "send config to {{ item.value.eMail }} by email"
+  - template:
+      src: rawEmail.txt.j2
+      dest: /tmp/rawEmail.txt
+      owner: root
+      group: root
+      mode: '0644'
+      backup: no
+  - shell: base64 /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn >> /tmp/rawEmail.txt
+  - shell: echo >> /tmp/rawEmail.txt
+  - shell: echo "--NextPart--" >> /tmp/rawEmail.txt
+  - shell: aws sesv2 send-email --from-email-address {{ senderMail }} --destination "ToAddresses={{ item.value.eMail }}" --content "Raw={Data=$(cat /tmp/rawEmail.txt | base64)}" --endpoint-url https://postbox.cloud.yandex.net
+    register: messageId
+  - debug:
+      msg: "{{ messageId.stdout }}"
+  when: sendConfigBy == 'email' and aws.region != '' and aws.access_key_id != '' and aws.secret_access_key != ''
+  rescue:
+  - debug:
+      msg: "Unable to send"
+  always:
+  - file:
+      path: /tmp/rawEmail.txt
+      state: absent
+
+- name: Telegram config to {{ item.value.clientNick }}
+  block:
+  - debug:
+      msg: "sending config to {{ item.value.clientNick }} by telegram"
+  - template:
+      src: telegramSender.py.j2
+      dest: "{{ telegram.botDir }}/telegramSender.py"
+      owner: root
+      group: root
+      mode: '0644'
+      backup: no
+  - command:
+      cmd: "{{ telegram.botDir }}/venv/bin/python3 {{ telegram.botDir }}/telegramSender.py --filePath /etc/openvpn/client/{{ item.value.clientNick }}/client.ovpn"
+    register: messageId
+  - debug:
+      msg: "{{ messageId.stdout }}"
+  when: sendConfigBy == 'telegram' and telegram.chatId != '' and telegram.token != ''
+  rescue:
+  - debug:
+      msg: "Unable to send"
+  always:
+  - file:
+      path: "{{ telegram.botDir }}/telegramSender.py"
+      state: absent

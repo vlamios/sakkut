@@ -1,0 +1,7 @@
+---
+all:
+  children:
+    RemoteInstances:
+      hosts:
+        OurTinySever:
+          ansible_host: 'x.x.x.x'

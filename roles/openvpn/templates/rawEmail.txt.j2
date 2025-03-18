@@ -1,0 +1,18 @@
+From: {{ senderMail }}
+To: {{ item.value.eMail }}
+Subject: Your config file attached
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="NextPart"
+
+--NextPart
+Content-Type: text/plain; charset=UTF-8
+
+Hello buddy!
+Here is your config file, you know what to do with it.
+Have fun!
+
+--NextPart
+Content-Type: text/plain ; name="client.ovpn"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="client.ovpn"
+

@@ -1,0 +1,36 @@
+import argparse, asyncio, os, random
+from telegram import Bot
+
+# Get variables from CLI arguments
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--filePath',   dest='FILE_PATH',   action='store', nargs=1, required=True, help='Path to file to send')
+cmdLineArgs = parser.parse_args()
+
+clientAccosts = ["baby", "cookie", "darling", "deary", "honey", "muffin", "poppet", "sugar", "sunshine", "sweetheart"]
+def get_random_accost():
+    return random.choice(clientAccosts)
+clientAccost = get_random_accost()
+
+async def send_file_to_telegram(bot_token, chat_id, file_path, message=f"@{{ item.value.clientNick }}, {clientAccost}, this is for you: "):
+    try:
+        if not os.path.exists(file_path):
+            print(f"No such file: {file_path}")
+            return
+
+        bot = Bot(token=bot_token)
+        await bot.send_message(chat_id=chat_id, text=message)
+        with open(file_path, 'rb') as file:
+            await bot.send_document(
+                chat_id=chat_id, 
+                document=file
+            )
+        print(f"File sent: {file_path}")
+
+    except Exception as e:
+        print(f"Unable to send: {e}")
+
+async def main():
+    await send_file_to_telegram("{{ telegram.token }}", "{{ telegram.chatId }}", (cmdLineArgs.FILE_PATH)[0] )
+
+if __name__ == '__main__':
+    asyncio.run(main())
