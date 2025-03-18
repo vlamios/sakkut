@@ -1,0 +1,21 @@
+---
+ansible_ssh_user: "{{ unixSemiAdmName }}"
+ansible_ssh_pass: "{{ unixSemiAdmPass }}"
+ansible_become: yes
+ansible_become_method: sudo
+ansible_become_pass: "{{ unixSemiAdmPass }}"
+
+unixSemiAdmName: osadmin
+unixSemiAdmGroup: users
+unixSemiAdmGroups:
+- users
+- adm
+- cdrom
+- plugdev
+- games
+unixSemiAdmComment: OS Admin
+unixSemiAdmSudo: "{{ unixSemiAdmName }}\tALL=(ALL) \tNOPASSWD: ALL"
+unixSemiAdmPass: ""
+
+# Public part of our key to add
+personalSSHkeys: []

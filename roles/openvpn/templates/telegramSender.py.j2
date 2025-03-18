@@ -1,15 +1,17 @@
-import argparse, asyncio, os
+import argparse, asyncio, os, random
 from telegram import Bot
 
 # Get variables from CLI arguments
 parser = argparse.ArgumentParser(description='Process some integers.')
-# parser.add_argument('--botToken',   dest='BOT_TOKEN',   action='store', nargs=1, required=True, help='Telegram Bot Token')
-# parser.add_argument('--chatID',     dest='CHAT_ID',     action='store', nargs=1, required=True, help='Telegram Chat ID')
-# parser.add_argument('--clientNick', dest='CLIENT_NICK', action='store', nargs=1, required=True, help='Telegram Client Nickname')
 parser.add_argument('--filePath',   dest='FILE_PATH',   action='store', nargs=1, required=True, help='Path to file to send')
 cmdLineArgs = parser.parse_args()
 
-async def send_file_to_telegram(bot_token, chat_id, file_path, message="@{{ item.value.clientNick }}, sweetie, this is for you: "):
+clientAccosts = ["baby", "cookie", "darling", "deary", "honey", "muffin", "poppet", "sugar", "sunshine", "sweetheart"]
+def get_random_accost():
+    return random.choice(clientAccosts)
+clientAccost = get_random_accost()
+
+async def send_file_to_telegram(bot_token, chat_id, file_path, message=f"@{{ item.value.clientNick }}, {clientAccost}, this is for you: "):
     try:
         if not os.path.exists(file_path):
             print(f"No such file: {file_path}")

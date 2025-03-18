@@ -1,20 +1,26 @@
 ---
 # email, telegram
-sendConfigBy: "telegram"
+sendConfigBy: ""
 
 telegram:
   botDir: /opt/telegram-bot
-  chatId: ''
-  token: ''
+# chatId can be found on https://web.telegram.org
+  chatId: ""
+# ask @BotFather for it
+  token: ""
 
 vpnClients:
-  vpnUser1:
-    clientNick: telegramNickName
-    eMail: nickName@example.com
+  client01:
+    clientNick: telegramNickName01
+    eMail: nickName01@example.com
+  client02:
+    clientNick: telegramNickName02
+    eMail: nickName02@example.com
 
+# Dig server external IP with:
 # dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
-# If defined would not dig
-diggedServerIP: '93.184.215.14'
+# if defined would not dig, FQDN also can be used
+diggedServerIP: 'ourtinyserver.example.com'
 
 var_EASYRSA_DN: org
 var_EASYRSA_REQ_COUNTRY: AQ
@@ -26,8 +32,8 @@ var_EASYRSA_REQ_OU: wdm
 
 openVPN_netWork: "192.168.168.192"
 openVPN_netMask: "255.255.255.192"
-openVPNserver_phyIface: "ens1"
-openVPNserver_port: 2205
+openVPNserver_phyIface: "eth0"
+openVPNserver_port: 3316
 openVPNserver_proto: udp
 openVPNserver_dev: tun
 openVPNserver_server: "{{ openVPN_netWork  }} {{ openVPN_netMask  }}"

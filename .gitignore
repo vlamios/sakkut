@@ -395,5 +395,8 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+# VSCode working folder
+.vscode
+
 # Folder containing sensitive data
 hidden/

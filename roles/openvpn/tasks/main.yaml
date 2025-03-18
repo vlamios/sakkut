@@ -158,7 +158,13 @@
     comment: Hope it works
   become: yes
 
-- name: Prepare Python Virtual ENV
+- name: Prepare iptables config
+  template:
+    src: iptables.j2
+    dest: /etc/iptables/rules.v4
+    mode: '0644'
+
+- name: Prepare python venv
   block:
   - file:
       path: "{{ telegram.botDir }}"
@@ -175,7 +181,7 @@
       name: pip
       state: latest
       virtualenv: "{{ telegram.botDir }}/venv"
-    # On Debian-based systems the correct python*-venv package must be installed to use the `venv` module.
+      # On Debian-based systems the correct python*-venv package must be installed to use the `venv` module.
       virtualenv_command: "{{ telegram.botDir }}/venv/bin/python3 -m venv"
   - pip:
       name: python-telegram-bot
@@ -200,4 +206,3 @@
     state: absent
   with_items:
     - /root/.aws/
-    - "{{ telegram.botDir }}"
